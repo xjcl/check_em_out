@@ -8,7 +8,7 @@ import logging
 import json
 import gdata.youtube.service
 import operator
-
+import datetime
 
 
 def getVideoIdFromEntry(entry):
@@ -27,7 +27,7 @@ def comment_generator(client, video_id, limit=1):
     while (comment_feed is not None and i<limit):
         i += 1
         for comment in comment_feed.entry:
-             return [comment]
+             yield comment
         next_link = comment_feed.GetNextLink()
         if next_link is None:
              comment_feed = None
@@ -76,7 +76,7 @@ def get_channel(entry):
 
 def run(sauce="vlogbrothers"):
     
-    logging.info("Starting script.")
+    logging.info("Starting script at "+str(datetime.datetime.now())+".")
     yt_service = gdata.youtube.service.YouTubeService()
     yt_service.ssl = True
     

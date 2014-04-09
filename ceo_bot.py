@@ -58,10 +58,11 @@ def parse_comment(comment):
                 logging.info("Responding to '"+lines[2]+"' ("+comment.id+")")
                 comment.reply(msg)
                 return comment.id
+            except praw.errors.RateLimitExceeded:
+                logging.error("Comment failed (RateLimitExceeded)."+
+                    " /r/FreeKarma?")
             except:
-                logging.info("Comment failed. "+
-                    "/r/FreeKarma?")
-                logging.info("Unexpected error:", sys.exc_info()[0])
+                logging.error("Unexpected error:"+str(sys.exc_info()[0]))
     return None
 
 
