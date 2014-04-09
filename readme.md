@@ -1,12 +1,12 @@
 check\_em\_out
 =========
 
-A bot that takes a channel name and looks for other channels that are popular with popular commentators (!=subscribers) of that channel. An intro to what the bot does can be found [here]().
+A bot that takes a channel name and looks for other channels that are popular with popular commentators (!=subscribers) of that channel. An intro to what the bot does can be found [here](http://www.reddit.com/r/nerdfighters/comments/22mhxr/i_wrote_a_bot_that_takes_a_youtube_channel_and/).
 
 Usage
 -----
 
-`python ceo_bot.py`
+Just run `python ceo_bot.py`
 
 The bot is already looped within that file.
 

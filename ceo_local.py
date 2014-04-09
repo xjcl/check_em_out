@@ -27,7 +27,7 @@ def comment_generator(client, video_id, limit=1):
     while (comment_feed is not None and i<limit):
         i += 1
         for comment in comment_feed.entry:
-             yield comment
+             return [comment]
         next_link = comment_feed.GetNextLink()
         if next_link is None:
              comment_feed = None

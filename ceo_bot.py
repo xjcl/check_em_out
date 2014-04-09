@@ -34,7 +34,7 @@ def format_message(tuple_array, sauce):
             lmsg += "\n\n"+str(tulpa[1])+": "+tulpa[0]
     #lmsg += ("\n\nAverage number of subscriptions: "+str(avg_subs))
     lmsg += ("\n\n~~-----------------------------~~\n\nI am a bot."+
-    "| [About](http://www.reddit.com/r/altnames/comments"+
+    " | [About](http://www.reddit.com/r/altnames/comments"+
     "/22lldb/ucheck_em_out_vlogbrothers_limit4/) | [Source]"+
     "(https://github.com/xjcl/check_em_out)")
     return lmsg
@@ -50,12 +50,12 @@ def parse_comment(comment):
             try:
                 sorted_channels = ceo_local.run(sauce=lines[2])
                 assert len(sorted_channels) > 0
-                msg = format_message(sorted_channels, sauce)
+                msg = format_message(sorted_channels, lines[2])
             except:
                 msg = "Unexpected error:"+str(sys.exc_info()[0])
                 logging.error(msg)
             try:
-                logging.info("Responding to '"+lines[1]+"' ("+comment.id+")")
+                logging.info("Responding to '"+lines[2]+"' ("+comment.id+")")
                 comment.reply(msg)
                 return comment.id
             except:
@@ -74,7 +74,6 @@ def listen(reddit, answered_coms, subreddits=["all"], limit=10000):
         if comment.id not in answered_coms:
             new_id = parse_comment(comment)
             if new_id:
-                print new_id
                 answered_coms.append(new_id)
     return answered_coms
 
