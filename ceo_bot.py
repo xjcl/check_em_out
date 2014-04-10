@@ -27,36 +27,59 @@ def getReddit(settings):
 def format_message(tuple_array, sauce):
     """Format a tuple_array (each entry: (number, string))
        and then some into a message printable by reddit."""
+    logging.info("Formatting message.")
     lmsg = ("People who had a popular comment on "+ sauce +
         " were also subscribed to:")
+    lmsg += "\n\n| Subs | Channel name |"
+    lmsg += "\n|-----:|:-------------|"
     for tulpa in tuple_array:
         if tulpa[1] > 2:
-            lmsg += "\n\n"+str(tulpa[1])+": "+tulpa[0]
+            try:
+                lmsg += "\n| "+str(tulpa[1])+" | "+tulpa[0]
+            except IndexError:
+                pass
     #lmsg += ("\n\nAverage number of subscriptions: "+str(avg_subs))
-    lmsg += ("\n\n~~-----------------------------~~\n\nI am a bot."+
-    " | [About](http://www.reddit.com/r/altnames/comments"+
+    lmsg += ("\n\n~~--------------------------------------------------~~"+
+    "\n\nI am a bot. | [About](http://www.reddit.com/r/altnames/comments"+
     "/22lldb/ucheck_em_out_vlogbrothers_limit4/) | [Source]"+
     "(https://github.com/xjcl/check_em_out)")
     return lmsg
 
 
 
+def get_sauce_from_comment(comment):
+    lines = comment.body.split("\n")
+    try:
+        if lines[0] != "/u/check_em_out":
+            assert lines[0].startswith("/u/check_em_out")
+            return lines[0][16:]
+        else:
+            if lines[1] != "":
+                return lines[1]
+            else:
+                return lines[2]
+    except:
+        logging.error("Error getting source channel from comment "+comment.id+".")
+        return None
+
+
 def parse_comment(comment):
     """Check if comment meets conditions and iff it does,
        run the program and comment on it (with output or error msg)"""
     if "/u/check_em_out" in comment.body:
-        lines = comment.body.split("\n")
-        if lines[0] == "/u/check_em_out":
+        sauce = get_sauce_from_comment(comment)
+        if sauce:
             try:
-                sorted_channels = ceo_local.run(sauce=lines[2])
+                sorted_channels = ceo_local.run(sauce=sauce)
                 assert len(sorted_channels) > 0
-                msg = format_message(sorted_channels, lines[2])
+                msg = format_message(sorted_channels, sauce)
             except:
                 msg = "Unexpected error:"+str(sys.exc_info()[0])
                 logging.error(msg)
             try:
-                logging.info("Responding to '"+lines[2]+"' ("+comment.id+")")
+                logging.info("Responding to '"+sauce+"' ("+comment.id+")")
                 comment.reply(msg)
+                logging.info("Comment succeeded!")
                 return comment.id
             except praw.errors.RateLimitExceeded:
                 logging.error("Comment failed (RateLimitExceeded)."+
@@ -71,6 +94,8 @@ def listen(reddit, answered_coms, subreddits=["all"], limit=10000):
     """Check newest comments for bot calls."""
     subreddit = "+".join(subreddits)
     logging.debug("Searching through these subreddits: "+subreddit)
+    # the only way to reverse the list would be to store it locally -
+    # which would be painful.
     for comment in reddit.get_subreddit(subreddit).get_comments(limit=limit):
         if comment.id not in answered_coms:
             new_id = parse_comment(comment)
@@ -138,9 +163,9 @@ def runBot():
 
 if __name__ == "__main__":
     # print to console - lots of errors while printing messages!?
-    #logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
     # print to log file
-    logging.basicConfig(filename='log.log',level=logging.DEBUG)
+    #logging.basicConfig(filename='log.log',level=logging.DEBUG)
     try:
         runBot()
     except SystemExit:

@@ -17,23 +17,6 @@ def getVideoIdFromEntry(entry):
 	
 
 
-
-def comment_generator(client, video_id, limit=1):
-    """(modified) from: http://stackoverflow.com/questions/12826680/
-       how-to-get-all-youtube-comments-with-pythons-gdata-module"""
-    # this line doesn't search by publishing order, but by 'relevance'
-    comment_feed = client.GetYouTubeVideoCommentFeed(video_id=video_id)
-    i = 0 # "[T]he API limits the number of entries that can be retrieved to 1000."
-    while (comment_feed is not None and i<limit):
-        i += 1
-        for comment in comment_feed.entry:
-             yield comment
-        next_link = comment_feed.GetNextLink()
-        if next_link is None:
-             comment_feed = None
-        else:
-             comment_feed = client.GetYouTubeVideoCommentFeed(next_link.href)
-
 def subscription_generator(client, uri):
     """(modified) from: http://stackoverflow.com/questions/12826680/
        how-to-get-all-youtube-comments-with-pythons-gdata-module
@@ -74,74 +57,31 @@ def get_channel(entry):
     
 
 
-def run(sauce="vlogbrothers"):
+def run(users=["vlogbrothers","zefrank1"]):
     
     logging.info("Starting script at "+str(datetime.datetime.now())+".")
     yt_service = gdata.youtube.service.YouTubeService()
     yt_service.ssl = True
     
     # ------------------------------
-    # get third-to-last video of youtuber
+    # get subscriptions of channels
     # ------------------------------
     
-    yt_service = gdata.youtube.service.YouTubeService()
-    # check if sauce is an actual channel that exists TODO
-    # ^handled by big clause at the beginning right?
-    uri = "http://gdata.youtube.com/feeds/api/users/"+sauce+"/uploads"
-    logging.info("Looking for a video by "+sauce+".")
-    feed = yt_service.GetYouTubeVideoFeed(uri)
-    uploads = feed.entry
-    try:
-        video = uploads[2] # the third-newest video should
-        # have been around for long enough to be 'average'
-    except:
-        video = uploads[0] # new channels
-    videoid = getVideoIdFromEntry(video)
-    logging.info("Got 'typical' video. ["+
-        unicode(video.title.text, "utf-8") +"] ("+videoid+").")
-    
-    # ------------------------------
-    # get a list of 'fans' using the commenters
-    #
-    # in v3, there is an option to get the subscribers
-    # directly. see: https://code.google.com/p/
-    # gdata-issues/issues/detail?id=300#c129
-    # ------------------------------
-    
-    fan_uris = []
-    limit = 2 # times 25 users to scan (~10*limit minutes)
-    for comment in comment_generator(yt_service, videoid, limit=limit):
-        fan_uris.append(comment.author[0].uri.text)
-    logging.info("Got all commenter URIs.")
-    
-    # ------------------------------
-    # get subscriptions of commenters
-    # ------------------------------
-    
-    frequency = {}
-    j = 0
-    #total_subs = 0
-    #total_users = 0
-    for partial_uri in fan_uris:
-        if True:
-            j += 1
-            #userid = getVideoIdFromEntry(uri) # abusing this
-            try:
-                uri = partial_uri + "/subscriptions"
-                subscription_feed = yt_service.GetYouTubeSubscriptionFeed(uri=uri)
-                #for entry in subscription_generator(yt_service, uri=uri):
-                for entry in subscription_feed.entry:
-                    if entry.GetSubscriptionType() == "channel":
-                        add_to_dict(frequency, get_channel(entry), 1)
-                        #total_subs += 1
-                logging.debug("Subscription feed number "+str(j)+" read successfully.")
-                #total_users += 1
-            except gdata.service.RequestError:
-                logging.error("gdata.service.RequestError"+
-                " while counting subscriptions.")
-            except:
-                logging.error("Unexpected error"+
-                " while counting subscriptions:"+str(sys.exc_info()[0]))
+    frequency = []
+    for username in users:
+        j += 1
+        try:
+            subscription_feed = yt_service.GetYouTubeSubscriptionFeed(username=username)
+            for entry in subscription_generator(yt_service, uri=uri):
+                if entry.GetSubscriptionType() == "channel":
+                    add_to_dict(frequency, get_channel(entry), 1)
+            logging.debug("Subscription feed number "+str(j)+" read successfully.")
+        except gdata.service.RequestError:
+            logging.error("gdata.service.RequestError"+
+            " while counting subscriptions.")
+        except:
+            logging.error("Unexpected error"+
+            " while counting subscriptions:"+str(sys.exc_info()[0]))
     
     # ------------------------------
     # save / return results

@@ -19,5 +19,6 @@ lib64
 # project-specific
 *.json
 log.log
+common_subs.py # it's a secret to everybody
 *~
 ~
