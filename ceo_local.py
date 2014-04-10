@@ -88,7 +88,7 @@ def run(sauce="vlogbrothers"):
     # check if sauce is an actual channel that exists TODO
     # ^handled by big clause at the beginning right?
     uri = "http://gdata.youtube.com/feeds/api/users/"+sauce+"/uploads"
-    logging.info("Looking for a video by "+sauce+".")
+    logging.info("Looking for a video by '"+sauce+"'.")
     feed = yt_service.GetYouTubeVideoFeed(uri)
     uploads = feed.entry
     try:
@@ -147,8 +147,6 @@ def run(sauce="vlogbrothers"):
     # save / return results
     # ------------------------------
     
-    logging.info("Printing results.")
-    
     """sort dict by most common answers"""
     sorted_channels = sorted(frequency.iteritems(),
         key=operator.itemgetter(1), reverse=True)
@@ -157,23 +155,25 @@ def run(sauce="vlogbrothers"):
     
     try:
         rf = open('results.json', 'r')
-    except:
-        logging.error("Error while opening to results.json.")
+    except IOError:
+        logging.info("results.json doesn't exist. Using null data instead.")
     try:
         results = json.load(rf)
-        rf.close()
         run_no = results["run_number"] + 1
-        results["run_number"] = run_no
-        results[str(run_no)+sauce] = sorted_channels[:10]
+        rf.close()
     except:
-        logging.error("Error while parsing to results.json. Is it empty?")
+        logging.error("Error while parsing results.json.")
+        results = {}
+        run_no = 1
+    results["run_number"] = run_no
+    results[str(run_no)+": "+sauce] = sorted_channels[:10]
     try:
         rf = open('results.json', 'w')
         json.dump(results, rf)
         rf.close()
     except:
         logging.error("Error while writing data to results.json.")
-    
+        
     # only makes sense when using subscription_generator()
     #avg_subs = total_subs / float(total_users)
     logging.info("Results saved!")
